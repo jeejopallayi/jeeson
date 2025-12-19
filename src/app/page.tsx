@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Sparkles, Brain, PartyPopper } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Section } from "@/components/ui/section";
@@ -52,11 +53,14 @@ export default function Home() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <div className="aspect-[4/5] bg-zinc-800 rounded-lg overflow-hidden relative">
-              {/* Placeholder for Jeeson's Photo */}
-              <div className="absolute inset-0 flex items-center justify-center text-gray-600">
-                [Jeeson Franz Portrait]
-              </div>
+            <div className="aspect-[4/5] bg-zinc-800 rounded-lg overflow-hidden relative border border-white/10">
+              <Image
+                src="/images/jeeson-bio.jpg"
+                alt="Jeeson Franz"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 50vw"
+              />
             </div>
           </motion.div>
           

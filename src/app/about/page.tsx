@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import Image from "next/image";
 import { Section } from "@/components/ui/section";
 
 export const metadata: Metadata = {
@@ -44,8 +45,14 @@ export default function AboutPage() {
           </div>
 
           <div className="space-y-8">
-             <div className="aspect-[3/4] bg-zinc-800 rounded-lg flex items-center justify-center text-gray-500">
-                [Jeeson Performing Live]
+             <div className="aspect-[3/4] relative bg-zinc-800 rounded-lg overflow-hidden border border-white/10">
+                <Image
+                  src="/images/jeeson-performing.jpg"
+                  alt="Jeeson Franz performing live"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                />
              </div>
              
              <div className="bg-secondary/50 p-6 rounded-lg border border-white/5">
