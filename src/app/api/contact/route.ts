@@ -18,7 +18,7 @@ const contactSchema = z.object({
 const rateLimitMap = new Map();
 
 function getResendClient() {
-  const apiKey = process.env.RESEND_API_KEY || process.env.NEXT_PUBLIC_RESEND_API_KEY;
+  const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     return null;
   }
