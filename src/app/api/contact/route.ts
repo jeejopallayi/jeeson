@@ -15,9 +15,15 @@ const contactSchema = z.object({
   recaptchaToken: z.string().min(1, "reCAPTCHA token is required"),
 });
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 const rateLimitMap = new Map();
+
+function getResendClient() {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    throw new Error("RESEND_API_KEY is not configured on the server.");
+  }
+  return new Resend(apiKey);
+}
 
 function getRateLimitKey(req: NextRequest): string {
   const forwarded = req.headers.get("x-forwarded-for");
@@ -138,6 +144,8 @@ export async function POST(req: NextRequest) {
         </p>
       </div>
     `;
+
+    const resend = getResendClient();
 
     const { data: emailData, error } = await resend.emails.send({
       from: "Jeeson Franz Website <onboarding@resend.dev>",
