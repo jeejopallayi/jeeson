@@ -7,25 +7,25 @@ export const metadata: Metadata = {
   description: "Watch magic and mentalism performances by Jeeson Franz.",
 };
 
-const videos = [
-  {
-    title: "Showreel",
-    description: "Signature moments and highlights (replace with Adilo embed URL).",
-    src: "https://iframe.mediadelivery.net/embed/YOUR-ADILO-VIDEO-ID-1",
-    thumbnail: "/images/gallery-1.jpg",
-  },
-  {
-    title: "Corporate Performance",
-    description: "Stage and corporate crowd reactions (replace with Adilo embed URL).",
-    src: "https://iframe.mediadelivery.net/embed/YOUR-ADILO-VIDEO-ID-2",
-    thumbnail: "/images/gallery-2.jpg",
-  },
-  {
-    title: "Close-Up Magic",
-    description: "Interactive magic moments (replace with Adilo embed URL).",
-    src: "https://iframe.mediadelivery.net/embed/YOUR-ADILO-VIDEO-ID-3",
-    thumbnail: "/images/gallery-3.jpg",
-  },
+type VideoItem = {
+  title: string;
+  src: string;
+  thumbnail?: string;
+  description?: string;
+};
+
+const videos: VideoItem[] = [
+  { title: "VID-20251114-WA0011", src: "https://adilo.bigcommand.com/watch/JwfoLS0d" },
+  { title: "VID20251220180453", src: "https://adilo.bigcommand.com/watch/CcUCK9ec" },
+  { title: "VID20251220180149", src: "https://adilo.bigcommand.com/watch/y9C_VEsD" },
+  { title: "VID_20260109095132213", src: "https://adilo.bigcommand.com/watch/0pMYWy4r" },
+  { title: "VID-20251115-WA0034", src: "https://adilo.bigcommand.com/watch/vT4msnkk" },
+  { title: "VID20251220180250", src: "https://adilo.bigcommand.com/watch/4FNr0TQ0" },
+  { title: "VID-20251115-WA0022(1)", src: "https://adilo.bigcommand.com/watch/MWfvT1ZS" },
+  { title: "VID-20250827-WA0068", src: "https://adilo.bigcommand.com/watch/LXS6knqS" },
+  { title: "VID20251220181843", src: "https://adilo.bigcommand.com/watch/oETGKjpx" },
+  { title: "AQM2dlARcr-WIQSnHnK_klkrg4qSXFgDbI4eWx40yEVMdJkME40E9V_i-sDqku-F6BLIX35fzbdMvv3EvbhReg45ufPa1gUfEP3...", src: "https://adilo.bigcommand.com/watch/LAnEJkjh" },
+  { title: "VID_20251217_220925_144", src: "https://adilo.bigcommand.com/watch/oSX7eqhE" },
 ];
 
 export default function VideosPage() {
@@ -44,8 +44,10 @@ export default function VideosPage() {
             <div key={video.title} className="space-y-3">
               <VideoEmbed src={video.src} title={video.title} thumbnail={video.thumbnail} />
               <div className="space-y-1">
-                <h2 className="text-xl font-semibold">{video.title}</h2>
-                <p className="text-gray-400 text-sm">{video.description}</p>
+                <h2 className="text-xl font-semibold break-words">{video.title}</h2>
+                {video.description ? (
+                  <p className="text-gray-400 text-sm">{video.description}</p>
+                ) : null}
               </div>
             </div>
           ))}
