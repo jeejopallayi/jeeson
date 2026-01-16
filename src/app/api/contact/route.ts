@@ -9,6 +9,7 @@ const contactSchema = z.object({
   eventType: z.string().min(1, "Please select an event type"),
   date: z.string().optional(),
   message: z.string().min(10, "Message must be at least 10 characters"),
+  recaptchaToken: z.string().min(1, "reCAPTCHA token is required"),
 });
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -69,6 +70,37 @@ export async function POST(req: NextRequest) {
     }
 
     const data = validationResult.data;
+
+    const recaptchaSecret = process.env.RECAPTCHA_SECRET_KEY;
+    if (!recaptchaSecret) {
+      console.warn("Missing RECAPTCHA_SECRET_KEY environment variable");
+      return NextResponse.json(
+        { error: "Server configuration error" },
+        { status: 500 }
+      );
+    }
+
+    const verifyResponse = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        secret: recaptchaSecret,
+        response: data.recaptchaToken,
+        remoteip: rateLimitKey,
+      }),
+      cache: "no-store",
+    });
+
+    const verification = await verifyResponse.json();
+    const score = typeof verification.score === "number" ? verification.score : 0;
+
+    if (!verification.success || score < 0.5) {
+      return NextResponse.json(
+        { error: "reCAPTCHA verification failed" },
+        { status: 400 }
+      );
+    }
+
     const yourEmail = process.env.YOUR_EMAIL || "jeesonfranz@gmail.com";
 
     const emailHtml = `

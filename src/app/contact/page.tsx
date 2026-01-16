@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -19,6 +19,8 @@ const formSchema = z.object({
   message: z.string().min(10, "Message must be at least 10 characters"),
 });
 
+const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+
 type FormData = z.infer<typeof formSchema>;
 
 export default function ContactPage() {
@@ -34,15 +36,62 @@ export default function ContactPage() {
     resolver: zodResolver(formSchema),
   });
 
+  useEffect(() => {
+    if (!recaptchaSiteKey) return;
+    if (document.querySelector("#recaptcha-script")) return;
+
+    const script = document.createElement("script");
+    script.src = `https://www.google.com/recaptcha/api.js?render=${recaptchaSiteKey}`;
+    script.async = true;
+    script.defer = true;
+    script.id = "recaptcha-script";
+    document.body.appendChild(script);
+
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, []);
+
+  const getRecaptchaToken = () =>
+    new Promise<string>((resolve, reject) => {
+      if (!recaptchaSiteKey) {
+        reject(new Error("reCAPTCHA site key not configured."));
+        return;
+      }
+
+      const grecaptcha = (window as any).grecaptcha;
+      if (!grecaptcha) {
+        reject(new Error("reCAPTCHA not loaded yet. Please try again."));
+        return;
+      }
+
+      grecaptcha.ready(() => {
+        grecaptcha
+          .execute(recaptchaSiteKey, { action: "contact" })
+          .then((token: string) => resolve(token))
+          .catch((err: unknown) =>
+            reject(err instanceof Error ? err : new Error("Failed to execute reCAPTCHA"))
+          );
+      });
+    });
+
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
+      if (!recaptchaSiteKey) {
+        throw new Error("reCAPTCHA is not configured yet.");
+      }
+
+      const recaptchaToken = await getRecaptchaToken();
+
       const response = await fetch("/api/contact", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, recaptchaToken }),
       });
 
       const result = await response.json();
