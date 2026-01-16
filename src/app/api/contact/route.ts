@@ -12,7 +12,7 @@ const contactSchema = z.object({
   eventType: z.string().min(1, "Please select an event type"),
   date: z.string().optional(),
   message: z.string().min(10, "Message must be at least 10 characters"),
-  recaptchaToken: z.string().min(1, "reCAPTCHA token is required"),
+  recaptchaToken: z.string().min(1, "reCAPTCHA token is required").optional(),
 });
 
 const rateLimitMap = new Map();
@@ -90,32 +90,36 @@ export async function POST(req: NextRequest) {
     }
 
     let verification: any = null;
-    try {
-      const verifyResponse = await fetch("https://www.google.com/recaptcha/api/siteverify", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          secret: recaptchaSecret,
-          response: data.recaptchaToken,
-          remoteip: rateLimitKey,
-        }),
-        cache: "no-store",
-      });
-      verification = await verifyResponse.json();
-    } catch (err) {
-      console.error("reCAPTCHA verification request failed", err);
-      return NextResponse.json(
-        { error: "Unable to verify reCAPTCHA right now. Please try again." },
-        { status: 502 }
-      );
-    }
+    if (recaptchaSecret && data.recaptchaToken) {
+      try {
+        const verifyResponse = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({
+            secret: recaptchaSecret,
+            response: data.recaptchaToken,
+            remoteip: rateLimitKey,
+          }),
+          cache: "no-store",
+        });
+        verification = await verifyResponse.json();
+      } catch (err) {
+        console.error("reCAPTCHA verification request failed", err);
+        return NextResponse.json(
+          { error: "Unable to verify reCAPTCHA right now. Please try again." },
+          { status: 502 }
+        );
+      }
 
-    const score = typeof verification?.score === "number" ? verification.score : 0;
-    if (!verification?.success || score < 0.5) {
-      return NextResponse.json(
-        { error: "reCAPTCHA verification failed" },
-        { status: 400 }
-      );
+      const score = typeof verification?.score === "number" ? verification.score : 0;
+      if (!verification?.success || score < 0.5) {
+        return NextResponse.json(
+          { error: "reCAPTCHA verification failed" },
+          { status: 400 }
+        );
+      }
+    } else {
+      console.warn("Skipping reCAPTCHA verification (missing key or token)");
     }
 
     const yourEmail = process.env.YOUR_EMAIL || "jeesonfranz@gmail.com";

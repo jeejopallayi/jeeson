@@ -20,7 +20,6 @@ const formSchema = z.object({
 });
 
 const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
-
 type FormData = z.infer<typeof formSchema>;
 
 export default function ContactPage() {
@@ -55,9 +54,9 @@ export default function ContactPage() {
   }, []);
 
   const getRecaptchaToken = () =>
-    new Promise<string>((resolve, reject) => {
+    new Promise<string | null>((resolve, reject) => {
       if (!recaptchaSiteKey) {
-        reject(new Error("reCAPTCHA site key not configured."));
+        resolve(null);
         return;
       }
 
@@ -80,10 +79,6 @@ export default function ContactPage() {
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
-      if (!recaptchaSiteKey) {
-        throw new Error("reCAPTCHA is not configured yet.");
-      }
-
       const recaptchaToken = await getRecaptchaToken();
 
       const response = await fetch("/api/contact", {
