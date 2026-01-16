@@ -135,19 +135,13 @@ export async function POST(req: NextRequest) {
       </div>
     `;
 
-    const apiKey =
-      process.env.RESEND_API_KEY ??
-      process.env.resend_api_key ??
-      process.env.RESEND ??
-      process.env.RESEND_KEY ??
-      process.env.RESEND_TOKEN;
+    const apiKey = process.env.RESEND_API_KEY;
 
-    if (!apiKey) {
-      console.error("Email sending error: RESEND_API_KEY is not configured on the server.");
+    if (!apiKey || apiKey.trim().length === 0) {
+      console.error("Email sending error: RESEND_API_KEY is missing or empty on the server.");
       return NextResponse.json(
         {
-          error:
-            "Email service not configured. Please set RESEND_API_KEY in the server environment and redeploy.",
+          error: "Email service not configured. Please set RESEND_API_KEY on the server and redeploy.",
         },
         { status: 500 }
       );
