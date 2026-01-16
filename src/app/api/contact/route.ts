@@ -17,13 +17,6 @@ const contactSchema = z.object({
 
 const rateLimitMap = new Map();
 
-function getResendClient() {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    return null;
-  }
-  return new Resend(apiKey);
-}
 
 function getRateLimitKey(req: NextRequest): string {
   const forwarded = req.headers.get("x-forwarded-for");
@@ -142,14 +135,25 @@ export async function POST(req: NextRequest) {
       </div>
     `;
 
-    const resend = getResendClient();
-    if (!resend) {
+    const apiKey =
+      process.env.RESEND_API_KEY ??
+      process.env.resend_api_key ??
+      process.env.RESEND ??
+      process.env.RESEND_KEY ??
+      process.env.RESEND_TOKEN;
+
+    if (!apiKey) {
       console.error("Email sending error: RESEND_API_KEY is not configured on the server.");
       return NextResponse.json(
-        { error: "Email service not configured. Please set RESEND_API_KEY." },
+        {
+          error:
+            "Email service not configured. Please set RESEND_API_KEY in the server environment and redeploy.",
+        },
         { status: 500 }
       );
     }
+
+    const resend = new Resend(apiKey);
 
     const { data: emailData, error } = await resend.emails.send({
       from: "Jeeson Franz Website <onboarding@resend.dev>",
