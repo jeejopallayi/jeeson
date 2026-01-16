@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 import { z } from "zod";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 const contactSchema = z.object({
   name: z.string().min(2, "Name is required"),
   email: z.string().email("Invalid email address"),
@@ -75,26 +78,34 @@ export async function POST(req: NextRequest) {
     if (!recaptchaSecret) {
       console.warn("Missing RECAPTCHA_SECRET_KEY environment variable");
       return NextResponse.json(
-        { error: "Server configuration error" },
+        { error: "Server configuration error (recaptcha not configured)" },
         { status: 500 }
       );
     }
 
-    const verifyResponse = await fetch("https://www.google.com/recaptcha/api/siteverify", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        secret: recaptchaSecret,
-        response: data.recaptchaToken,
-        remoteip: rateLimitKey,
-      }),
-      cache: "no-store",
-    });
+    let verification: any = null;
+    try {
+      const verifyResponse = await fetch("https://www.google.com/recaptcha/api/siteverify", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          secret: recaptchaSecret,
+          response: data.recaptchaToken,
+          remoteip: rateLimitKey,
+        }),
+        cache: "no-store",
+      });
+      verification = await verifyResponse.json();
+    } catch (err) {
+      console.error("reCAPTCHA verification request failed", err);
+      return NextResponse.json(
+        { error: "Unable to verify reCAPTCHA right now. Please try again." },
+        { status: 502 }
+      );
+    }
 
-    const verification = await verifyResponse.json();
-    const score = typeof verification.score === "number" ? verification.score : 0;
-
-    if (!verification.success || score < 0.5) {
+    const score = typeof verification?.score === "number" ? verification.score : 0;
+    if (!verification?.success || score < 0.5) {
       return NextResponse.json(
         { error: "reCAPTCHA verification failed" },
         { status: 400 }
@@ -139,7 +150,7 @@ export async function POST(req: NextRequest) {
     if (error) {
       console.error("Email sending error:", error);
       return NextResponse.json(
-        { error: "Failed to send email. Please try again." },
+        { error: error.message || "Failed to send email. Please try again." },
         { status: 500 }
       );
     }
@@ -150,8 +161,10 @@ export async function POST(req: NextRequest) {
     );
   } catch (error) {
     console.error("Contact form error:", error);
+    const message =
+      error instanceof Error ? error.message : typeof error === "string" ? error : "Unexpected server error";
     return NextResponse.json(
-      { error: "Something went wrong. Please try again." },
+      { error: message },
       { status: 500 }
     );
   }

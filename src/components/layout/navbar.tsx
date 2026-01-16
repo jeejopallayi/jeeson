@@ -63,7 +63,7 @@ export function Navbar() {
               </Link>
             ))}
             <Link href="/contact">
-              <Button size="sm">Book Now</Button>
+              <Button size="sm">Contact</Button>
             </Link>
           </div>
 
@@ -95,7 +95,7 @@ export function Navbar() {
           ))}
           <div className="flex justify-center pt-2">
              <Link href="/contact" className="w-full">
-              <Button className="w-full">Book Now</Button>
+              <Button className="w-full">Contact</Button>
              </Link>
           </div>
         </div>
