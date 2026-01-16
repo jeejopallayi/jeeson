@@ -81,13 +81,6 @@ export async function POST(req: NextRequest) {
     const data = validationResult.data;
 
     const recaptchaSecret = process.env.RECAPTCHA_SECRET_KEY;
-    if (!recaptchaSecret) {
-      console.warn("Missing RECAPTCHA_SECRET_KEY environment variable");
-      return NextResponse.json(
-        { error: "Server configuration error (recaptcha not configured)" },
-        { status: 500 }
-      );
-    }
 
     let verification: any = null;
     if (recaptchaSecret && data.recaptchaToken) {
