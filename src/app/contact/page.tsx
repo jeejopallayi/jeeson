@@ -94,7 +94,15 @@ export default function ContactPage() {
         body: JSON.stringify({ ...data, recaptchaToken }),
       });
 
-      const result = await response.json();
+      const raw = await response.text();
+      let result: { error?: string; success?: boolean } = {};
+
+      try {
+        result = raw ? JSON.parse(raw) : {};
+      } catch (parseError) {
+        console.error("Failed to parse response JSON:", parseError, raw);
+        result = { error: raw || "Unexpected server response" };
+      }
 
       if (!response.ok) {
         throw new Error(result.error || "Failed to send message");
